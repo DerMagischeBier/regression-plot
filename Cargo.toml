@@ -1,0 +1,10 @@
+[package]
+name = "regression-plot"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+tch = "0.1.7"
+anyhow = "1.0.31"
+plotters = "0.2.15"
+rand = "0.7.3"
