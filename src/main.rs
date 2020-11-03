@@ -10,7 +10,7 @@ fn net(vs: &nn::Path) -> impl Module {
         .add(nn::linear(vs, 10, 1, Default::default()))
 }
 
-fn produce_data(n_data_points: usize) -> (Vec<f64>, Vec<f64>) {
+fn generate_data(n_data_points: usize) -> (Vec<f64>, Vec<f64>) {
     let data = (0..n_data_points)
         .map(|_| thread_rng().gen_range(-4., 4.))
         .collect::<Vec<_>>();
@@ -21,7 +21,7 @@ fn produce_data(n_data_points: usize) -> (Vec<f64>, Vec<f64>) {
 }
 
 fn main() -> Result<()> {
-    let (input_data, output_data) = produce_data(200);
+    let (input_data, output_data) = generate_data(200);
 
     // create tensors from regression data
     let input = Tensor::of_slice(&input_data)
@@ -50,7 +50,7 @@ fn main() -> Result<()> {
 
     root.fill(&WHITE)?;
 
-    let mut plot = ChartBuilder::on(&root).build_ranged(-4.5f64..4.5f64, -0.5f64..17f64)?;
+    let mut plot = ChartBuilder::on(&root).build_cartesian_2d(-4.5f64..4.5f64, -0.5f64..17f64)?;
 
     // plot training data
     plot.draw_series(
