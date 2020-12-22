@@ -12,8 +12,8 @@ fn net(vs: &nn::Path) -> impl Module {
 
 fn generate_data(n_data_points: usize) -> (Vec<f64>, Vec<f64>) {
     let data = (0..n_data_points)
-        .map(|_| thread_rng().gen_range(-4., 4.))
-        .collect::<Vec<_>>();
+        .map(|_| thread_rng().gen_range(-4.0..4.0))
+        .collect::<Vec<f64>>();
 
     let data_output = data.iter().map(|&x| x * x).collect::<Vec<_>>();
 
@@ -25,10 +25,10 @@ fn main() -> Result<()> {
 
     // create tensors from regression data
     let input = Tensor::of_slice(&input_data)
-        .view((input_data.len() as i64, 1))
+        .view((input_data.len() as i64,1))
         .to_kind(Kind::Float);
     let output = Tensor::of_slice(&output_data)
-        .view(output_data.len() as i64)
+        .view((output_data.len() as i64,1))
         .to_kind(Kind::Float);
 
     let vs = nn::VarStore::new(Device::Cpu);
@@ -38,9 +38,7 @@ fn main() -> Result<()> {
     for epoch in 1..500 {
         let loss = net
             .forward(&input)
-            .mse_loss(&output, Reduction::None)
-            .diag(0)
-            .sum(Kind::Float);
+            .mse_loss(&output, Reduction::Sum);
         opt.backward_step(&loss);
 
         println!("epoch: {:4} train loss: {:8.5}", epoch, f64::from(&loss),);

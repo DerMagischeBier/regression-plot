@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-tch = "0.2.1"
-anyhow = "1.0.31"
+tch = "0.3.0"
+anyhow = "1.0.36"
 plotters = "0.3.0"
-rand = "0.7.3"
+rand = "0.8.0"
