@@ -1,40 +1,22 @@
 use anyhow::Result;
 use plotters::prelude::*;
 use rand::distributions::Uniform;
-use rand::{thread_rng, Rng};
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 use rand_distr::{Distribution, Normal};
+use std::path::Path;
 use tch::{nn, nn::Module, nn::OptimizerConfig, Device, Kind, Reduction, Tensor};
 
-fn net(vs: &nn::Path) -> impl Module {
-    nn::seq()
-        .add(nn::linear(vs / "layer1", 1, 50, Default::default()))
-        .add_fn(|xs| xs.relu())
-        .add(nn::linear(vs, 50, 1, Default::default()))
-}
-
-/// Samples points from function with added error following a normal distribution
-fn generate_data(n_data_points: usize) -> (Vec<f64>, Vec<f64>) {
-    let data: Vec<f64> = thread_rng()
-        .sample_iter(Uniform::new(-4.0, 4.0))
-        .take(n_data_points)
-        .collect();
-
-    // normal distribution to add sampling error
-    let normal = Normal::new(0.0, 1.0).unwrap();
-    let data_output = data
-        .iter()
-        .map(|&x| {
-            let error = normal.sample(&mut thread_rng());
-
-            (0.09 * x.powi(3) + 2.0 * x.cos() - 1.0) + error
-        })
-        .collect::<Vec<_>>();
-
-    (data, data_output)
-}
+const SEED: u64 = 0;
 
 fn main() -> Result<()> {
-    let (input_data, output_data) = generate_data(500);
+    create_plot(Path::new("regression_plot.png"))?;
+
+    Result::Ok(())
+}
+
+fn create_plot(file_path: &Path) -> Result<()> {
+    let (input_data, output_data) = generate_data(1000);
 
     // create tensors from regression data
     let input = Tensor::of_slice(&input_data)
@@ -43,6 +25,8 @@ fn main() -> Result<()> {
     let output = Tensor::of_slice(&output_data)
         .view((output_data.len() as i64, 1))
         .to_kind(Kind::Float);
+
+    tch::manual_seed(SEED as i64);
 
     let vs = nn::VarStore::new(Device::Cpu);
     // set up neural network structure
@@ -57,7 +41,7 @@ fn main() -> Result<()> {
         println!("epoch: {:4} train loss: {:8.5}", epoch, f64::from(&loss),);
     }
 
-    let root = BitMapBackend::new("regression_plot.png", (1024, 768)).into_drawing_area();
+    let root = BitMapBackend::new(file_path, (1024, 768)).into_drawing_area();
 
     root.fill(&WHITE)?;
 
@@ -103,4 +87,52 @@ fn main() -> Result<()> {
         .draw()?;
 
     Result::Ok(())
+}
+
+fn net(vs: &nn::Path) -> impl Module {
+    nn::seq()
+        .add(nn::linear(vs / "layer1", 1, 50, Default::default()))
+        .add_fn(|xs| xs.relu())
+        .add(nn::linear(vs, 50, 1, Default::default()))
+}
+
+/// Samples points from function with added error following a normal distribution
+fn generate_data(n_data_points: usize) -> (Vec<f64>, Vec<f64>) {
+    let mut rng = StdRng::seed_from_u64(SEED);
+
+    let data: Vec<f64> = (&mut rng)
+        .sample_iter(Uniform::new(-4.0, 4.0))
+        .take(n_data_points)
+        .collect();
+
+    // normal distribution to add sampling error
+    let normal = Normal::new(0.0, 1.0).unwrap();
+    let data_output = data
+        .iter()
+        .map(|&x| {
+            let error = normal.sample(&mut rng);
+
+            (0.09 * x.powi(3) + 2.0 * x.cos() - 1.0) + error
+        })
+        .collect::<Vec<_>>();
+
+    (data, data_output)
+}
+
+#[cfg(test)]
+mod test {
+    use super::create_plot;
+    use std::path::Path;
+
+    #[test]
+    fn test_creation_of_plot() {
+        create_plot(Path::new("test_regression_plot.png")).unwrap();
+
+        assert!(file_diff::diff(
+            "regression_plot.png",
+            "test_regression_plot.png"
+        ));
+
+        std::fs::remove_file("test_regression_plot.png").unwrap();
+    }
 }
