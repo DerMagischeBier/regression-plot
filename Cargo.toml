@@ -1,14 +1,14 @@
 [package]
 name = "regression-plot"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-tch = "0.5.0"
+tch = "0.6.1"
 anyhow = "1.0.43"
 plotters = "0.3.1"
 rand = "0.8.4"
-rand_distr = "0.4.1"
+rand_distr = "0.4.2"
 
 [dev-dependencies]
 file_diff = "1.0.0"
