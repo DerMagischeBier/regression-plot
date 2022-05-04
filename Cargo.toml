@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tch = "0.6.1"
-anyhow = "1.0.43"
+tch = "0.7"
+anyhow = "1.0.57"
 plotters = "0.3.1"
-rand = "0.8.4"
-rand_distr = "0.4.2"
+rand = "0.8.5"
+rand_distr = "0.4.3"
 
 [dev-dependencies]
 file_diff = "1.0.0"

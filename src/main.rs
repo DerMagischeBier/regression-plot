@@ -92,7 +92,7 @@ fn create_plot(file_path: &Path) -> Result<()> {
 fn net(vs: &nn::Path) -> impl Module {
     nn::seq()
         .add(nn::linear(vs / "layer1", 1, 50, Default::default()))
-        .add_fn(|xs| xs.relu())
+        .add_fn(tch::Tensor::relu)
         .add(nn::linear(vs, 50, 1, Default::default()))
 }
 
